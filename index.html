@@ -3,172 +3,264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu Universo 3D</title>
+  <title>Universo Para María</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background-color: #000;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #05020a;
+      font-family: 'Poppins', sans-serif, system-ui;
+      user-select: none;
     }
     #canvas-container {
       width: 100vw;
       height: 100vh;
     }
-    /* Tarjeta con mensaje personalizable */
-    #mensaje {
+    
+    /* Título brillante superior */
+    #titulo {
       position: absolute;
-      top: 20px;
+      top: 30px;
       left: 50%;
       transform: translateX(-50%);
       color: #ffffff;
+      font-size: 2.8rem;
+      font-weight: 800;
       text-align: center;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 
+                   0 0 30px rgba(255, 105, 180, 0.6);
       pointer-events: none;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 15px 25px;
+      z-index: 10;
+    }
+
+    /* Mensaje instructivo inferior */
+    #instruccion {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Estilo de las etiquetas emergentes con frases */
+    .frase-tag {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 3px 10px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(5px);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    }
-    h1 {
-      margin: 0 0 5px 0;
-      font-size: 1.8rem;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-    }
-    p {
-      margin: 0;
-      font-size: 1rem;
-      color: #ddd;
+      font-size: 0.75rem;
+      pointer-events: none;
+      white-space: nowrap;
+      transform: translate(-50%, -100%);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transition: opacity 0.3s;
     }
   </style>
 </head>
 <body>
 
-  <div id="mensaje">
-    <h1>EL UNIVERSO DE [NOMBRE]</h1>
-    <p>Haz clic y arrastra para explorar. ¡Feliz Cumpleaños!</p>
-  </div>
-
+  <div id="titulo">Universo Para María 🌌</div>
+  <div id="instruccion">Usa el ratón para mover la galaxia y hacer zoom</div>
+  
+  <div id="labels-container"></div>
   <div id="canvas-container"></div>
 
-  <!-- Carga de Three.js y OrbitControls desde CDN -->
+  <!-- Three.js y OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
-    // 1. Configuración Básica de la Escena
-    const container = document.getElementById('canvas-container');
+    // 1. Configuración de la Escena
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 20, 35);
+    scene.fog = new THREE.FogExp2(0x05020a, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 25, 45);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // Controles para rotar la vista con el mouse
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.1;
 
     // 2. Iluminación
-    const ambientLight = new THREE.AmbientLight(0x333333);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.PointLight(0xffffff, 2, 300);
+    const sunLight = new THREE.PointLight(0xffdd66, 3, 200);
     scene.add(sunLight);
 
-    // 3. Fondo de Estrellas
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsCount = 3000;
-    const starPositions = new Float32Array(starsCount * 3);
-
-    for (let i = 0; i < starsCount * 3; i++) {
-      starPositions[i] = (Math.random() - 0.5) * 400;
+    // 3. Fondo de Estrellas Titilantes
+    const starsGeo = new THREE.BufferGeometry();
+    const count = 2500;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 300;
     }
-
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8 });
-    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, transparent: true, opacity: 0.8 });
+    const starField = new THREE.Points(starsGeo, starsMat);
     scene.add(starField);
 
-    // 4. Creación del Sol
-    const sunGeo = new THREE.SphereGeometry(4, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    // 4. Sol Central con Resplandor
+    const sunGeo = new THREE.SphereGeometry(3.5, 32, 32);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc33 });
     const sun = new THREE.Mesh(sunGeo, sunMat);
     scene.add(sun);
 
-    // Glow suave alrededor del sol
-    const glowGeo = new THREE.SphereGeometry(4.4, 32, 32);
+    // Glow magenta / amarillo alrededor del sol
+    const glowGeo = new THREE.SphereGeometry(4.8, 32, 32);
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0xffdd55,
+      color: 0xff88aa,
       transparent: true,
-      opacity: 0.3
+      opacity: 0.35,
+      side: THREE.BackSide
     });
-    const sunGlow = new THREE.Mesh(glowGeo, glowMat);
-    scene.add(sunGlow);
+    scene.add(new THREE.Mesh(glowGeo, glowMat));
 
-    // 5. Generador de Planetas
-    const planets = [];
+    // 5. Crear Forma 3D del Corazón 💖
+    function createHeartShape() {
+      const shape = new THREE.Shape();
+      const x = 0, y = 0;
+      shape.moveTo(x + 0.25, y + 0.25);
+      shape.bezierCurveTo(x + 0.25, y + 0.25, x, y, x, y - 0.25);
+      shape.bezierCurveTo(x, y - 0.55, x - 0.35, y - 0.77, x - 0.7, y - 0.77);
+      shape.bezierCurveTo(x - 1.1, y - 0.77, x - 1.2, y - 0.45, x - 1.2, y - 0.35);
+      shape.bezierCurveTo(x - 1.2, y - 0.1, x - 0.9, y + 0.25, x, y + 0.8);
+      shape.bezierCurveTo(x + 0.9, y + 0.25, x + 1.2, y - 0.1, x + 1.2, y - 0.35);
+      shape.bezierCurveTo(x + 1.2, y - 0.45, x + 1.1, y - 0.77, x + 0.7, y - 0.77);
+      shape.bezierCurveTo(x + 0.35, y - 0.77, x, y, x, y - 0.25);
 
-    function createPlanet(radius, color, distance, speed, hasRing = false) {
-      const orbitGroup = new THREE.Group();
-      scene.add(orbitGroup);
-
-      // Malla del planeta
-      const geo = new THREE.SphereGeometry(radius, 32, 32);
-      const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.x = distance;
-      orbitGroup.add(mesh);
-
-      // Línea de órbita visual
-      const orbitGeo = new THREE.RingGeometry(distance - 0.05, distance + 0.05, 64);
-      const orbitMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
-      const orbitLine = new THREE.Mesh(orbitGeo, orbitMat);
-      orbitLine.rotation.x = Math.PI / 2;
-      scene.add(orbitLine);
-
-      // Anillo (para planetas tipo Saturno)
-      if (hasRing) {
-        const ringGeo = new THREE.RingGeometry(radius + 0.5, radius + 1.8, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xaaffff, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        mesh.add(ring);
-      }
-
-      planets.push({ group: orbitGroup, mesh: mesh, speed: speed });
+      const extrudeSettings = { depth: 0.3, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.1, bevelThickness: 0.1 };
+      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      geometry.center();
+      return geometry;
     }
 
-    // Creación de varios planetas
-    createPlanet(0.8, 0x888888, 8, 0.03);   // Planeta 1
-    createPlanet(1.2, 0x2288ff, 13, 0.02);  // Planeta 2 (Tipo Tierra)
-    createPlanet(1.8, 0xff5533, 19, 0.012); // Planeta 3
-    createPlanet(1.5, 0x00e5ff, 26, 0.008, true); // Planeta 4 con Anillo
+    const heartGeo = createHeartShape();
+    const heartMat = new THREE.MeshPhongMaterial({
+      color: 0xff3388,
+      emissive: 0xaa1144,
+      shininess: 80,
+      side: THREE.DoubleSide
+    });
 
-    // 6. Bucle de Animación
+    // 6. Anillos de Órbitas Concéntricas
+    const orbitRadii = [8, 12, 16, 20, 24, 28];
+    orbitRadii.forEach(r => {
+      const ringGeo = new THREE.RingGeometry(r - 0.05, r + 0.05, 128);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring);
+    });
+
+    // 7. Lista de Frases Cariñosas
+    const frases = [
+      "Te quiero mucho 💖", "Eres mi universo ✨", "Sonríe siempre 😊", 
+      "Un abrazo enorme 🫂", "Un poco de magia ✨", "Sueños al infinito 🚀", 
+      "Magia sin fin 🔮", "Mi persona favorita 🤍", "Brilla siempre 🌟", 
+      "Infinito amor Infinity", "Gracias por existir 🌸", "Pide un deseo 🌠",
+      "Siempre juntos 💫", "Tu sonrisa ilumina ☀️"
+    ];
+
+    const heartsData = [];
+    const labelsContainer = document.getElementById('labels-container');
+
+    // Generar corazones flotantes en órbitas
+    const totalHearts = 35;
+    for (let i = 0; i < totalHearts; i++) {
+      const heartMesh = new THREE.Mesh(heartGeo, heartMat);
+      
+      // Escala aleatoria para variedad
+      const scale = 0.4 + Math.random() * 0.4;
+      heartMesh.scale.set(scale, scale, scale);
+
+      // Asignar órbita y ángulo
+      const radius = orbitRadii[Math.floor(Math.random() * orbitRadii.length)] + (Math.random() - 0.5) * 1.5;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (0.003 + Math.random() * 0.005) * (Math.random() < 0.5 ? 1 : -1);
+
+      heartMesh.position.x = Math.cos(angle) * radius;
+      heartMesh.position.z = Math.sin(angle) * radius;
+      heartMesh.position.y = (Math.random() - 0.5) * 2;
+
+      scene.add(heartMesh);
+
+      // Crear etiqueta de texto si corresponde
+      let labelEl = null;
+      if (i < frases.length) {
+        labelEl = document.createElement('div');
+        labelEl.className = 'frase-tag';
+        labelEl.innerText = frases[i];
+        labelsContainer.appendChild(labelEl);
+      }
+
+      heartsData.push({
+        mesh: heartMesh,
+        radius: radius,
+        angle: angle,
+        speed: speed,
+        labelEl: labelEl
+      });
+    }
+
+    // Proyectar coordenadas 3D a la pantalla 2D (para las etiquetas)
+    function updateLabels() {
+      const tempV = new THREE.Vector3();
+      heartsData.forEach(item => {
+        if (item.labelEl) {
+          item.mesh.getWorldPosition(tempV);
+          tempV.project(camera);
+
+          // Verificar si el elemento está frente a la cámara
+          if (tempV.z < 1) {
+            const x = (tempV.x *  .5 + .5) * window.innerWidth;
+            const y = (tempV.y * -.5 + .5) * window.innerHeight;
+            item.labelEl.style.transform = `translate(-50%, -100%) translate(${x}px,${y}px)`;
+            item.labelEl.style.opacity = '1';
+          } else {
+            item.labelEl.style.opacity = '0';
+          }
+        }
+      });
+    }
+
+    // 8. Bucle de Animación
     function animate() {
       requestAnimationFrame(animate);
 
-      // Rotación del sol
-      sun.rotation.y += 0.002;
+      // Rotar el Sol
+      sun.rotation.y += 0.003;
 
-      // Movimiento orbital de planetas
-      planets.forEach(p => {
-        p.group.rotation.y += p.speed;
-        p.mesh.rotation.y += 0.01; // Rotación sobre su propio eje
+      // Animar Corazones
+      heartsData.forEach(item => {
+        item.angle += item.speed;
+        item.mesh.position.x = Math.cos(item.angle) * item.radius;
+        item.mesh.position.z = Math.sin(item.angle) * item.radius;
+        item.mesh.rotation.y += 0.02;
+        item.mesh.rotation.z = Math.sin(Date.now() * 0.002 + item.radius) * 0.2;
       });
 
       controls.update();
       renderer.render(scene, camera);
+      updateLabels();
     }
 
     animate();
 
-    // Redimensionamiento responsive
+    // Redimensionar automáticamente al cambiar ventana
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
