@@ -3,375 +3,521 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universo Para María</title>
+  <title>Universo para María</title>
   <style>
-    body {
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      background-color: #020108;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      user-select: none;
+      background-color: #020208;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     #canvas-container {
-      width: 100vw;
-      height: 100vh;
-    }
-    
-    /* Título brillante superior */
-    #titulo {
+      width: 100%;
+      height: 100%;
       position: absolute;
-      top: 35px;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Título principal neón */
+    .title-banner {
+      position: absolute;
+      top: 8%;
       left: 50%;
       transform: translateX(-50%);
-      color: #ffffff;
-      font-size: 2.5rem;
-      font-weight: 800;
+      z-index: 10;
       text-align: center;
-      text-shadow: 0 0 20px rgba(255, 105, 180, 0.8), 0 0 40px rgba(255, 182, 193, 0.5);
+      width: 100%;
       pointer-events: none;
-      z-index: 10;
-      letter-spacing: 1px;
     }
 
-    /* Mensaje instructivo inferior */
-    #instruccion {
-      position: absolute;
-      bottom: 25px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 0.88rem;
-      letter-spacing: 0.8px;
-      pointer-events: none;
-      z-index: 10;
-      text-shadow: 0 0 10px rgba(0,0,0,0.8);
-    }
-
-    /* Frases flotantes SIN bordes ni cuadros */
-    .frase-tag {
-      position: absolute;
+    .title-banner h1 {
       color: #ffffff;
-      font-size: 0.82rem;
-      font-weight: 600;
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: capitalize;
+      text-shadow: 
+        0 0 10px #fff,
+        0 0 20px #ffb700,
+        0 0 30px #ff8c00,
+        0 0 50px #ff4500,
+        0 0 80px #ff3300;
+      animation: glow 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes glow {
+      0% {
+        text-shadow: 
+          0 0 10px #fff,
+          0 0 20px #ffd700,
+          0 0 30px #ff8c00,
+          0 0 40px #ff4500;
+      }
+      100% {
+        text-shadow: 
+          0 0 15px #fff,
+          0 0 25px #ffb700,
+          0 0 45px #ff8c00,
+          0 0 70px #ff4500,
+          0 0 90px #ff2200;
+      }
+    }
+
+    .instructions {
+      position: absolute;
+      bottom: 15px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+      z-index: 10;
       pointer-events: none;
-      white-space: nowrap;
-      transform: translate(-50%, -100%);
-      text-shadow: 0 0 8px rgba(255, 105, 180, 0.9), 
-                   0 0 15px rgba(0, 0, 0, 0.9),
-                   2px 2px 4px rgba(0,0,0,0.9);
-      transition: opacity 0.2s ease;
-      letter-spacing: 0.3px;
+    }
+
+    @media (max-width: 768px) {
+      .title-banner h1 {
+        font-size: 2.2rem;
+      }
     }
   </style>
+  <!-- Three.js y OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-  <div id="titulo">Universo Para María 🌌</div>
-  <div id="instruccion">Usa el ratón para mover la galaxia y hacer zoom</div>
-  
-  <div id="labels-container"></div>
-  <div id="canvas-container"></div>
+  <div class="title-banner">
+    <h1>Universo para María 🌷</h1>
+  </div>
 
-  <!-- Library Three.js & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <div id="canvas-container"></div>
+  <div class="instructions">Usa el ratón para mover la galaxia y hacer zoom</div>
 
   <script>
-    // 1. Configuración Principal
+    // ------------------- ESCENA Y CÁMARA 3D -------------------
+    const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020108, 0.005);
+    scene.fog = new THREE.FogExp2(0x020208, 0.0004);
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 30, 50);
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 160, 260);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    renderer.toneMappingExposure = 1.35;
+    container.appendChild(renderer.domElement);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.04;
-    controls.maxPolarAngle = Math.PI / 2 + 0.15;
+    controls.dampingFactor = 0.05;
 
-    // 2. Iluminación Realista
-    const ambientLight = new THREE.AmbientLight(0xffb6c1, 0.6);
+    // ------------------- ILUMINACIÓN INTENSA (SOL) -------------------
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.PointLight(0xffea9f, 4, 300);
+    const sunLight = new THREE.PointLight(0xffaa00, 3.5, 600);
+    sunLight.position.set(0, 0, 0);
     scene.add(sunLight);
 
-    // 3. Estrellas Parpadeantes (Puntos brillantes con Shader)
-    const starCount = 3500;
-    const starGeo = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(starCount * 3);
-    const starScales = new Float32Array(starCount);
+    const dirLight = new THREE.DirectionalLight(0xffd700, 1.2);
+    dirLight.position.set(100, 100, 50);
+    scene.add(dirLight);
 
-    for (let i = 0; i < starCount; i++) {
-      starPositions[i * 3] = (Math.random() - 0.5) * 400;
-      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 400;
-      starPositions[i * 3 + 2] = (Math.random() - 0.5) * 400;
-      starScales[i] = Math.random();
+    // ------------------- GENERADOR DE TEXTURA SOLAR -------------------
+    function generateSunTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, '#ffcc00');
+      grad.addColorStop(0.25, '#ff8800');
+      grad.addColorStop(0.5, '#ff3300');
+      grad.addColorStop(0.75, '#ff9900');
+      grad.addColorStop(1, '#ffee00');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Manchas solares y llamaradas simuladas
+      ctx.fillStyle = 'rgba(255, 255, 200, 0.35)';
+      for (let i = 0; i < 600; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const rx = Math.random() * 80 + 10;
+        const ry = Math.random() * 20 + 5;
+        ctx.beginPath();
+        ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      return new THREE.CanvasTexture(canvas);
     }
 
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('aScale', new THREE.BufferAttribute(starScales, 1));
+    // ------------------- EL SOL HERMOSO CENTRAL -------------------
+    const sunGroup = new THREE.Group();
+    scene.add(sunGroup);
 
-    const starMat = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 }
-      },
-      vertexShader: `
-        attribute float aScale;
-        uniform float time;
-        varying float vBrightness;
-        void main() {
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_Position = projectionMatrix * mvPosition;
-          float blink = sin(time * 3.0 + aScale * 62.8) * 0.5 + 0.5;
-          vBrightness = blink;
-          gl_PointSize = (1.5 + blink * 2.0) * (200.0 / -mvPosition.z);
-        }
-      `,
-      fragmentShader: `
-        varying float vBrightness;
-        void main() {
-          float dist = length(gl_PointCoord - vec2(0.5));
-          if (dist > 0.5) discard;
-          float alpha = smoothstep(0.5, 0.0, dist);
-          gl_FragColor = vec4(1.0, 0.95, 1.0, alpha * (0.4 + vBrightness * 0.6));
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
+    const sunTexture = generateSunTexture();
+    const sunGeo = new THREE.SphereGeometry(22, 64, 64);
+    const sunMat = new THREE.MeshStandardMaterial({
+      map: sunTexture,
+      roughness: 0.1,
+      metalness: 0.1,
+      emissive: 0xff6600,
+      emissiveIntensity: 0.85
     });
+    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunMesh.renderOrder = 10;
+    sunGroup.add(sunMesh);
 
-    const starField = new THREE.Points(starGeo, starMat);
-    scene.add(starField);
+    // Corona y Resplandor Exterior del Sol
+    function createSunGlow() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
 
-    // 4. Nebulosa Realista (Polvo de gas magenta y violeta)
-    const nebulaCount = 600;
-    const nebulaGeo = new THREE.BufferGeometry();
-    const nebulaPos = new Float32Array(nebulaCount * 3);
-    const nebulaColors = new Float32Array(nebulaCount * 3);
+      const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      grad.addColorStop(0, 'rgba(255, 230, 150, 1)');
+      grad.addColorStop(0.25, 'rgba(255, 140, 0, 0.7)');
+      grad.addColorStop(0.6, 'rgba(255, 60, 0, 0.25)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-    const palette = [
-      new THREE.Color(0xff007f), // Magenta
-      new THREE.Color(0x8a2be2), // Púrpura
-      new THREE.Color(0x4169e1), // Azul real
-      new THREE.Color(0xff1493)  // Rosa profundo
-    ];
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
 
-    for (let i = 0; i < nebulaCount; i++) {
-      const radius = 10 + Math.random() * 50;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = (Math.random() - 0.5) * 0.8;
+      const glowTex = new THREE.CanvasTexture(canvas);
+      const glowMat = new THREE.SpriteMaterial({
+        map: glowTex,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
 
-      nebulaPos[i * 3] = radius * Math.cos(theta);
-      nebulaPos[i * 3 + 1] = (Math.random() - 0.5) * 8;
-      nebulaPos[i * 3 + 2] = radius * Math.sin(theta);
-
-      const color = palette[Math.floor(Math.random() * palette.length)];
-      nebulaColors[i * 3] = color.r;
-      nebulaColors[i * 3 + 1] = color.g;
-      nebulaColors[i * 3 + 2] = color.b;
+      const glowSprite = new THREE.Sprite(glowMat);
+      glowSprite.scale.set(110, 110, 1);
+      return glowSprite;
     }
 
-    nebulaGeo.setAttribute('position', new THREE.BufferAttribute(nebulaPos, 3));
-    nebulaGeo.setAttribute('color', new THREE.BufferAttribute(nebulaColors, 3));
+    const sunGlow = createSunGlow();
+    sunGroup.add(sunGlow);
 
-    const nebulaMat = new THREE.PointsMaterial({
-      size: 18,
+    // ------------------- GALAXIA Y NEBULOSA EN TODA LA PANTALLA -------------------
+    const galaxyGroup = new THREE.Group();
+    scene.add(galaxyGroup);
+
+    function createNebulaTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      grad.addColorStop(0, 'rgba(255, 105, 180, 0.4)');
+      grad.addColorStop(0.35, 'rgba(138, 43, 226, 0.22)');
+      grad.addColorStop(0.7, 'rgba(0, 191, 255, 0.1)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const nebulaTexture = createNebulaTexture();
+    const numNebulaClouds = 250;
+
+    for (let i = 0; i < numNebulaClouds; i++) {
+      const nebulaMat = new THREE.SpriteMaterial({
+        map: nebulaTexture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        opacity: Math.random() * 0.28 + 0.1,
+        depthWrite: false
+      });
+      const nebula = new THREE.Sprite(nebulaMat);
+
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = Math.pow(Math.random(), 0.6) * 320 + 45;
+
+      nebula.position.set(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta) * 0.5,
+        r * Math.cos(phi)
+      );
+
+      const scale = Math.random() * 90 + 40;
+      nebula.scale.set(scale, scale, 1);
+      galaxyGroup.add(nebula);
+    }
+
+    // ------------------- ESTRELLAS BLANCAS CON PARPADEO -------------------
+    const particleCount = 12000;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    const twinkleSpeeds = new Float32Array(particleCount);
+    const twinkleOffsets = new Float32Array(particleCount);
+    const baseSizes = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      const r = Math.pow(Math.random(), 1.5) * 230 + 15;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * (20 * (1 - r / 250));
+
+      positions[i * 3] = Math.cos(theta) * r;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = Math.sin(theta) * r;
+
+      colors[i * 3] = 1.0; 
+      colors[i * 3 + 1] = 1.0; 
+      colors[i * 3 + 2] = 1.0;
+
+      twinkleSpeeds[i] = Math.random() * 4 + 1.5;
+      twinkleOffsets[i] = Math.random() * Math.PI * 2;
+      baseSizes[i] = Math.random() * 1.3 + 0.6;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    particleGeo.setAttribute('twinkleSpeed', new THREE.BufferAttribute(twinkleSpeeds, 1));
+    particleGeo.setAttribute('twinkleOffset', new THREE.BufferAttribute(twinkleOffsets, 1));
+    particleGeo.setAttribute('baseSize', new THREE.BufferAttribute(baseSizes, 1));
+
+    const twinkleVertexShader = `
+      attribute float twinkleSpeed;
+      attribute float twinkleOffset;
+      attribute float baseSize;
+      uniform float uTime;
+      varying vec3 vColor;
+
+      void main() {
+        vColor = color;
+        float twinkle = sin(uTime * twinkleSpeed + twinkleOffset);
+        float sizeFactor = 0.2 + 0.8 * (twinkle * 0.5 + 0.5);
+
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        gl_PointSize = (baseSize * sizeFactor) * (300.0 / -mvPosition.z);
+      }
+    `;
+
+    const twinkleFragmentShader = `
+      varying vec3 vColor;
+
+      void main() {
+        float dist = length(gl_PointCoord - vec2(0.5));
+        if (dist > 0.5) discard;
+        float alpha = smoothstep(0.5, 0.05, dist);
+        gl_FragColor = vec4(vColor, alpha * 0.95);
+      }
+    `;
+
+    const particleMat = new THREE.ShaderMaterial({
+      vertexShader: twinkleVertexShader,
+      fragmentShader: twinkleFragmentShader,
+      uniforms: { uTime: { value: 0.0 } },
       vertexColors: true,
       transparent: true,
-      opacity: 0.12,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-
-    const nebula = new THREE.Points(nebulaGeo, nebulaMat);
-    scene.add(nebula);
-
-    // 5. Sol Realista con Shader Procedural
-    const sunGeo = new THREE.SphereGeometry(4.2, 64, 64);
-    const sunMat = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 }
-      },
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec2 vUv;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float time;
-        varying vec3 vNormal;
-        varying vec2 vUv;
-        
-        // Simulación de ruido para fuego solar
-        float noise(vec2 p) {
-          return sin(p.x * 10.0 + time * 2.0) * cos(p.y * 10.0 + time * 1.5);
-        }
-
-        void main() {
-          float n = noise(vUv * 3.0);
-          vec3 baseColor = vec3(1.0, 0.5, 0.0); // Naranja solar
-          vec3 coreColor = vec3(1.0, 0.95, 0.5); // Centro amarillo incandescente
-          vec3 spotColor = vec3(0.9, 0.2, 0.0); // Fuego intenso
-
-          vec3 finalColor = mix(baseColor, coreColor, n + 0.3);
-          finalColor = mix(finalColor, spotColor, sin(vUv.y * 20.0 + time) * 0.3);
-
-          gl_FragColor = vec4(finalColor, 1.0);
-        }
-      `
-    });
-    const sun = new THREE.Mesh(sunGeo, sunMat);
-    scene.add(sun);
-
-    // Resplandor Corona Solar (Atmósfera exterior)
-    const coronaGeo = new THREE.SphereGeometry(5.4, 32, 32);
-    const coronaMat = new THREE.MeshBasicMaterial({
-      color: 0xffaa33,
-      transparent: true,
-      opacity: 0.28,
-      side: THREE.BackSide,
+      depthWrite: false,
       blending: THREE.AdditiveBlending
     });
-    scene.add(new THREE.Mesh(coronaGeo, coronaMat));
 
-    // 6. Corazones Estilo Emoji 💖 (Geometría suave y acabados brillantes)
-    function createEmojiHeartGeometry() {
-      const shape = new THREE.Shape();
-      // Dibujo optimizado para emular la forma redondeada del emoji
-      shape.moveTo(0, 0.8);
-      shape.bezierCurveTo(0.8, 1.5, 1.9, 1.0, 1.9, 0.1);
-      shape.bezierCurveTo(1.9, -0.7, 1.1, -1.3, 0, -2.1);
-      shape.bezierCurveTo(-1.1, -1.3, -1.9, -0.7, -1.9, 0.1);
-      shape.bezierCurveTo(-1.9, 1.0, -0.8, 1.5, 0, 0.8);
+    const galaxyParticles = new THREE.Points(particleGeo, particleMat);
+    galaxyGroup.add(galaxyParticles);
 
-      const extrudeSettings = {
-        depth: 0.5,
-        bevelEnabled: true,
-        bevelSegments: 8,
-        steps: 3,
-        bevelSize: 0.35,
-        bevelThickness: 0.35
-      };
-      
-      const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      geo.center();
-      return geo;
+    // ------------------- TULIPANES -------------------
+    function createTulipTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.beginPath();
+      ctx.moveTo(64, 75);
+      ctx.quadraticCurveTo(68, 95, 64, 115);
+      ctx.strokeStyle = '#43a047';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(54, 96, 7, 16, -0.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#66bb6a';
+      ctx.fill();
+
+      ctx.fillStyle = '#d81b60';
+      ctx.beginPath();
+      ctx.ellipse(50, 52, 14, 26, -0.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.ellipse(78, 52, 14, 26, 0.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ff4081';
+      ctx.beginPath();
+      ctx.ellipse(64, 50, 16, 28, 0, 0, Math.PI * 2);
+      ctx.shadowColor = '#ff80ab';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+
+      return new THREE.CanvasTexture(canvas);
     }
 
-    const heartGeo = createEmojiHeartGeometry();
-    
-    // Material rosa chicle brillante estilo iOS Emoji
-    const heartMat = new THREE.MeshStandardMaterial({
-      color: 0xff2a75,
-      emissive: 0x880033,
-      roughness: 0.15,
-      metalness: 0.1,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1
-    });
+    const tulipTexture = createTulipTexture();
+    const tulipGroup = new THREE.Group();
+    galaxyGroup.add(tulipGroup);
 
-    // 7. Órbitas Elegantes Fina
-    const orbitRadii = [9, 13.5, 18, 22.5, 27, 31.5];
-    orbitRadii.forEach(r => {
-      const ringGeo = new THREE.BufferGeometry();
-      const points = [];
-      const segments = 128;
-      for (let i = 0; i <= segments; i++) {
-        const theta = (i / segments) * Math.PI * 2;
-        points.push(new THREE.Vector3(Math.cos(theta) * r, 0, Math.sin(theta) * r));
-      }
-      ringGeo.setFromPoints(points);
+    const numTulips = 140;
+    for (let i = 0; i < numTulips; i++) {
+      const spriteMat = new THREE.SpriteMaterial({ map: tulipTexture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
 
-      const ringMat = new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.12
-      });
-      const ring = new THREE.Line(ringGeo, ringMat);
-      scene.add(ring);
-    });
+      const r = Math.random() * 200 + 35;
+      const angle = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 16;
 
-    // 8. Frases Cariñosas
-    const frases = [
-      "Te quiero mucho 💖", "Eres mi universo ✨", "Sonríe siempre 😊", 
-      "Un abrazo enorme 🫂", "Un poco de magia ✨", "Sueños al infinito 🚀", 
-      "Magia sin fin 🔮", "Mi persona favorita 🤍", "Brilla siempre 🌟", 
-      "Infinito amor ♾️", "Gracias por existir 🌸", "Pide un deseo 🌠",
-      "Siempre juntos 💫", "Tu sonrisa ilumina ☀️"
+      sprite.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+      sprite.scale.set(5.0, 5.0, 1);
+      tulipGroup.add(sprite);
+    }
+
+    // ------------------- CORAZÓN 💖 EMOJI -------------------
+    function createHeartEmojiTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.font = '85px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(255, 105, 180, 0.8)';
+      ctx.shadowBlur = 12;
+      ctx.fillText('💖', canvas.width / 2, canvas.height / 2);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const heartTexture = createHeartEmojiTexture();
+    const heartGroup = new THREE.Group();
+    galaxyGroup.add(heartGroup);
+
+    // ------------------- FRASES EN 6 ÓRBITAS -------------------
+    const orbitPhrases = [
+      // Órbita 1 (Interior)
+      ["Eres Luz ✨", "Te quiero mucho 💖", "Sigue brillando 🌟", "¡Universo hermoso! 🎉", "Un abrazo enorme 🤗", "Mi favorita 💕"],
+      // Órbita 2
+      ["Deseos infinitos 🌠", "Siempre sonríe 😊", "Un año de magia ✨", "¡Universo María! 🌷", "Sé muy feliz 🌺", "Gracias por existir 💫"],
+      // Órbita 3
+      ["El universo celebra 🌌", "Más que mil estrellas 💫", "Sueños al infinito 🚀", "Universo y magia ☀️", "Infinitas alegrías 🌸", "Eres increíble 🌷"],
+      // Órbita 4
+      ["Un año radiante ✨", "Vive cada instante 💖", "Brillas con alma 🌟", "Sonrisas eternas 😊", "Día maravilloso 🎉", "Amor y luz 💕"],
+      // Órbita 5
+      ["Abrazos al cielo 🌌", "Magia sin fin 🌠", "Momento inolvidable ☀️", "Sigue tus sueños 🚀", "Tu luz es única 🌺", "Siempre especial 💫"],
+      // Órbita 6 (Exterior)
+      ["Pide un deseo ✨", "Un universo para ti ☀️", "Felicidad pura 😊", "Brillo infinito ☀️", "Te queremos María 💖", "Celebra en grande 🌸"]
     ];
 
-    const heartsData = [];
-    const labelsContainer = document.getElementById('labels-container');
+    function createPhraseSprite(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
 
-    const totalHearts = 38;
-    for (let i = 0; i < totalHearts; i++) {
-      const heartMesh = new THREE.Mesh(heartGeo, heartMat);
-      
-      const scale = 0.35 + Math.random() * 0.25;
-      heartMesh.scale.set(scale, scale, scale);
+      ctx.font = 'Bold 28px "Segoe UI", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 10;
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
-      const radius = orbitRadii[i % orbitRadii.length] + (Math.random() - 0.5) * 1.2;
-      const angle = Math.random() * Math.PI * 2;
-      const speed = (0.002 + Math.random() * 0.003) * (i % 2 === 0 ? 1 : -1);
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(38, 9.5, 1);
+      return sprite;
+    }
 
-      heartMesh.position.x = Math.cos(angle) * radius;
-      heartMesh.position.z = Math.sin(angle) * radius;
-      heartMesh.position.y = (Math.random() - 0.5) * 2;
+    // Dibujar las 6 órbitas e insertar las frases y corazones 💖
+    for (let orbitIndex = 0; orbitIndex < 6; orbitIndex++) {
+      const radius = (orbitIndex + 1) * 32 + 10;
 
-      scene.add(heartMesh);
+      // Línea de la órbita
+      const orbitGeo = new THREE.RingGeometry(radius - 0.3, radius + 0.3, 128);
+      const orbitMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.15
+      });
+      const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
+      orbitMesh.rotation.x = Math.PI / 2;
+      galaxyGroup.add(orbitMesh);
 
-      let labelEl = null;
-      if (i < frases.length) {
-        labelEl = document.createElement('div');
-        labelEl.className = 'frase-tag';
-        labelEl.innerText = frases[i];
-        labelsContainer.appendChild(labelEl);
+      // Distribuir 6 frases uniformemente
+      const phrasesInOrbit = orbitPhrases[orbitIndex];
+      const angleStep = (Math.PI * 2) / 6;
+      const orbitOffsetAngle = orbitIndex * 0.3;
+
+      phrasesInOrbit.forEach((phraseText, i) => {
+        const sprite = createPhraseSprite(phraseText);
+        const angle = i * angleStep + orbitOffsetAngle;
+
+        sprite.position.set(
+          Math.cos(angle) * radius,
+          (Math.random() - 0.5) * 6 + 2,
+          Math.sin(angle) * radius
+        );
+
+        galaxyGroup.add(sprite);
+      });
+
+      // Distribuir corazones 💖 orbitando en cada anillo
+      const heartsPerOrbit = 20;
+      for (let h = 0; h < heartsPerOrbit; h++) {
+        const heartSpriteMat = new THREE.SpriteMaterial({ 
+          map: heartTexture, 
+          transparent: true,
+          depthWrite: false 
+        });
+        const heartSprite = new THREE.Sprite(heartSpriteMat);
+
+        const hAngle = Math.random() * Math.PI * 2;
+        const hRadius = radius + (Math.random() - 0.5) * 8;
+        const hY = (Math.random() - 0.5) * 12;
+
+        heartSprite.position.set(
+          Math.cos(hAngle) * hRadius,
+          hY,
+          Math.sin(hAngle) * hRadius
+        );
+
+        const scale = Math.random() * 3.5 + 4.5;
+        heartSprite.scale.set(scale, scale, 1);
+        heartGroup.add(heartSprite);
       }
-
-      heartsData.push({
-        mesh: heartMesh,
-        radius: radius,
-        angle: angle,
-        speed: speed,
-        labelEl: labelEl
-      });
     }
 
-    // Proyección de Etiquetas a pantalla
-    function updateLabels() {
-      const tempV = new THREE.Vector3();
-      heartsData.forEach(item => {
-        if (item.labelEl) {
-          item.mesh.getWorldPosition(tempV);
-          tempV.y += 0.8; // Posición ligeramente sobre el corazón
-          tempV.project(camera);
-
-          if (tempV.z < 1) {
-            const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
-            const y = (tempV.y * -0.5 + 0.5) * window.innerHeight;
-            item.labelEl.style.transform = `translate(-50%, -100%) translate(${x}px,${y}px)`;
-            item.labelEl.style.opacity = '1';
-          } else {
-            item.labelEl.style.opacity = '0';
-          }
-        }
-      });
-    }
-
-    // 9. Bucle de Animación
+    // ------------------- BUCLE DE ANIMACIÓN -------------------
     let clock = new THREE.Clock();
 
     function animate() {
@@ -379,32 +525,23 @@
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Actualizar shaders
-      starMat.uniforms.time.value = elapsedTime;
-      sunMat.uniforms.time.value = elapsedTime;
+      // Parpadeo de estrellas
+      particleMat.uniforms.uTime.value = elapsedTime;
 
-      // Rotación suave de la nebulosa
-      nebula.rotation.y = elapsedTime * 0.02;
+      // Rotación y latido del Sol
+      sunMesh.rotation.y = elapsedTime * 0.08;
+      const scalePulse = 1 + Math.sin(elapsedTime * 2) * 0.02;
+      sunGlow.scale.set(110 * scalePulse, 110 * scalePulse, 1);
 
-      // Movimiento de corazones
-      heartsData.forEach(item => {
-        item.angle += item.speed;
-        item.mesh.position.x = Math.cos(item.angle) * item.radius;
-        item.mesh.position.z = Math.sin(item.angle) * item.radius;
-        
-        // Ligero bamboleo 3D
-        item.mesh.rotation.y += 0.015;
-        item.mesh.rotation.x = Math.sin(elapsedTime * 2 + item.radius) * 0.2;
-      });
+      // Rotación suave de la galaxia completa
+      galaxyGroup.rotation.y = elapsedTime * 0.05;
 
       controls.update();
       renderer.render(scene, camera);
-      updateLabels();
     }
 
     animate();
 
-    // Redimensionamiento
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
